@@ -35,6 +35,12 @@ APP_VER = "0.0.203"
 # https://github.com/amidaware/rmmagent
 LATEST_AGENT_VER = "2.11.0"
 
+# pa.co.it: self-hosted signed agents, per platform. Empty dict = use Amidaware.
+# Template supports {ver}, {plat} and {goarch}.
+SELF_SIGNED_AGENTS = {
+    "linux": "https://github.com/pa-co-it/rmmagent/releases/download/linux-{ver}/tacticalrmm-{plat}-{goarch}",
+}
+
 MESH_VER = "1.2.4"
 
 NATS_SERVER_VER = "2.14.4"

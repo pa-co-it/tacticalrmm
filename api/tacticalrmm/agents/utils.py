@@ -24,6 +24,11 @@ from tacticalrmm.helpers import notify_error
 
 def get_agent_url(*, goarch: str, plat: str, token: str = "") -> str:
     ver = settings.LATEST_AGENT_VER
+
+    self_signed = getattr(settings, "SELF_SIGNED_AGENTS", {}).get(plat)
+    if self_signed:
+        return self_signed.format(ver=ver, plat=plat, goarch=goarch)
+
     if token:
         params = {
             "version": ver,

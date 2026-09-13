@@ -718,7 +718,13 @@ def install_agent(request):
 
     codesign_token, is_valid = token_is_valid()
 
-    if request.data["installMethod"] in {"bash", "mac"} and not is_valid:
+    self_signed = bool(getattr(settings, "SELF_SIGNED_AGENTS", {}).get(plat))
+
+    if (
+        request.data["installMethod"] in {"bash", "mac"}
+        and not is_valid
+        and not self_signed
+    ):
         return notify_error(
             "Linux/Mac agents require code signing. Please see https://docs.tacticalrmm.com/code_signing/ for more info."
         )
