@@ -41,6 +41,17 @@ SELF_SIGNED_AGENTS = {
     "linux": "https://github.com/pa-co-it/rmmagent/releases/download/linux-{ver}/tacticalrmm-{plat}-{goarch}",
 }
 
+# pa.co.it: local Windows agent installer build (Inno Setup under Wine).
+# Set to None/{} to fall back to the Amidaware EXE_GEN_URL.
+SELF_SIGNED_INSTALLER = {
+    "iss": "/home/tactical/pacoit-installer/setup-pacoit.iss",
+    "iscc": r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+    "wineprefix": "/home/tactical/.wine",
+}
+SELF_SIGNED_WIN_AGENT_URL = (
+    "https://github.com/pa-co-it/rmmagent/releases/download/win-{ver}/tacticalrmm-windows-{goarch}.exe"
+)
+
 MESH_VER = "1.2.4"
 
 NATS_SERVER_VER = "2.14.4"

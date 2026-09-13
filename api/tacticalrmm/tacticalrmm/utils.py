@@ -60,6 +60,22 @@ def generate_winagent_exe(
     api: str,
     file_name: str,
 ) -> Union[Response, FileResponse]:
+    local = getattr(settings, "SELF_SIGNED_INSTALLER", None)
+    if local:
+        return _build_local_win_installer(
+            client=client,
+            site=site,
+            agent_type=agent_type,
+            rdp=rdp,
+            ping=ping,
+            power=power,
+            goarch=goarch,
+            token=token,
+            api=api,
+            file_name=file_name,
+            local=local,
+        )
+
     from agents.utils import get_agent_url
 
     inno = (
@@ -107,6 +123,110 @@ def generate_winagent_exe(
                     f.write(chunk)
         del r
         return FileResponse(open(fp.name, "rb"), as_attachment=True, filename=file_name)
+
+
+def _build_local_win_installer(
+    *,
+    client: int,
+    site: int,
+    agent_type: str,
+    rdp: int,
+    ping: int,
+    power: int,
+    goarch: str,
+    token: str,
+    api: str,
+    file_name: str,
+    local: dict,
+) -> Union[Response, FileResponse]:
+    """Compila el instalador Inno del agente Windows localmente (Wine + ISCC)."""
+
+    def winpath(p: str) -> str:
+        return "Z:" + p.replace("/", "\\")
+
+    dl_url = settings.SELF_SIGNED_WIN_AGENT_URL.format(
+        ver=settings.LATEST_AGENT_VER, goarch=goarch
+    )
+
+    workdir = tempfile.mkdtemp(prefix="pacoit-inst-")
+    agent_exe = os.path.join(workdir, "tacticalrmm.exe")
+    out_dir = os.path.join(workdir, "out")
+    os.makedirs(out_dir, exist_ok=True)
+
+    try:
+        r = requests.get(dl_url, timeout=900)
+        r.raise_for_status()
+        with open(agent_exe, "wb") as f:
+            f.write(r.content)
+    except Exception as e:
+        DebugLog.error(
+            message=f"installer: no se pudo descargar el agente Windows: {e}"
+        )
+        return notify_error(
+            "No se pudo descargar el agente Windows. Revisa el log de errores."
+        )
+
+    run_flags = "--silent"
+    if int(rdp):
+        run_flags += " --rdp"
+    if int(ping):
+        run_flags += " --ping"
+    if int(power):
+        run_flags += " --power"
+
+    out_name = re.sub(
+        r"\.exe$",
+        "",
+        file_name or f"tacticalagent-v{settings.LATEST_AGENT_VER}-windows-{goarch}",
+    )
+
+    cmd = [
+        "xvfb-run",
+        "-a",
+        "wine",
+        local["iscc"],
+        f"/DClient={client}",
+        f"/DSite={site}",
+        f"/DApi={api}",
+        f"/DToken={token}",
+        f"/DAgentType={agent_type}",
+        f"/DRunFlags={run_flags}",
+        f"/DAgentVersion={settings.LATEST_AGENT_VER}",
+        f"/DAgentExePath={winpath(agent_exe)}",
+        f"/DOutName={out_name}",
+        f"/O{winpath(out_dir)}",
+        winpath(local["iss"]),
+    ]
+
+    env = os.environ.copy()
+    env["WINEPREFIX"] = local["wineprefix"]
+    env["WINEDEBUG"] = "-all"
+
+    try:
+        proc = subprocess.run(
+            cmd, env=env, timeout=900, capture_output=True, text=True
+        )
+    except Exception as e:
+        DebugLog.error(message=f"installer: error ejecutando ISCC: {e}")
+        return notify_error(
+            "Error compilando el instalador. Revisa el log de errores."
+        )
+
+    out_file = os.path.join(out_dir, out_name + ".exe")
+    if proc.returncode != 0 or not os.path.exists(out_file):
+        DebugLog.error(
+            message=(
+                f"installer ISCC rc={proc.returncode} "
+                f"out={proc.stdout[-1500:]!r} err={proc.stderr[-1500:]!r}"
+            )
+        )
+        return notify_error(
+            "Fallo al compilar el instalador. Revisa el log de errores."
+        )
+
+    return FileResponse(
+        open(out_file, "rb"), as_attachment=True, filename=out_name + ".exe"
+    )
 
 
 def get_default_timezone():
