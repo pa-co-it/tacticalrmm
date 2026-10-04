@@ -39,6 +39,7 @@ LATEST_AGENT_VER = "2.11.0"
 # Template supports {ver}, {plat} and {goarch}.
 SELF_SIGNED_AGENTS = {
     "linux": "https://github.com/pa-co-it/rmmagent/releases/download/linux-{ver}/tacticalrmm-{plat}-{goarch}",
+    "darwin": "https://github.com/pa-co-it/rmmagent/releases/download/macos-{ver}/tacticalrmm-{plat}-{goarch}",
 }
 
 # pa.co.it: hosts excluidos del auto-update de agentes (equipos de cliente sensibles)
