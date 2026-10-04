@@ -41,6 +41,9 @@ SELF_SIGNED_AGENTS = {
     "linux": "https://github.com/pa-co-it/rmmagent/releases/download/linux-{ver}/tacticalrmm-{plat}-{goarch}",
 }
 
+# pa.co.it: hosts excluidos del auto-update de agentes (equipos de cliente sensibles)
+AUTO_UPDATE_EXCLUDE_HOSTS = ["NAS-CORTIJO"]
+
 # pa.co.it: local Windows agent installer build (Inno Setup under Wine).
 # Set to None/{} to fall back to the Amidaware EXE_GEN_URL.
 SELF_SIGNED_INSTALLER = {

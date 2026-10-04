@@ -17,6 +17,17 @@ class Command(BaseCommand):
             return
 
         q = Agent.objects.defer(*AGENT_DEFER).exclude(version=settings.LATEST_AGENT_VER)
+
+        # pa.co.it: solo auto-actualizamos plataformas con agente propio firmado
+        plats = list(getattr(settings, "SELF_SIGNED_AGENTS", {}).keys())
+        if plats:
+            q = q.filter(plat__in=plats)
+
+        # pa.co.it: hosts excluidos del auto-update
+        excludes = getattr(settings, "AUTO_UPDATE_EXCLUDE_HOSTS", [])
+        if excludes:
+            q = q.exclude(hostname__in=excludes)
+
         agent_ids: list[str] = [
             i.agent_id
             for i in q
