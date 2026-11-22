@@ -224,9 +224,46 @@ def _build_local_win_installer(
             "Fallo al compilar el instalador. Revisa el log de errores."
         )
 
+    sign_url = getattr(settings, "SELF_SIGNED_INSTALLER_SIGN_URL", None)
+    if sign_url:
+        err = _sign_win_installer(out_file, sign_url)
+        if err:
+            DebugLog.error(message=f"installer: firma Azure fallida: {err}")
+            return notify_error(
+                "No se pudo firmar el instalador. Revisa el log de errores."
+            )
+
     return FileResponse(
         open(out_file, "rb"), as_attachment=True, filename=out_name + ".exe"
     )
+
+
+def _sign_win_installer(path: str, sign_url: str) -> Optional[str]:
+    """Firma en sitio el instalador con Azure Artifact Signing vía la API pa.co.it.
+
+    La API (EZE, /instaladores/firmar) recibe el PE y devuelve la misma imagen
+    firmada. El token va en local_settings.py (PACOIT_INSTALADORES_TOKEN), nunca
+    en el repo. Devuelve None si todo va bien o el motivo del fallo.
+    """
+    token = getattr(settings, "PACOIT_INSTALADORES_TOKEN", "")
+    if not token:
+        return "falta PACOIT_INSTALADORES_TOKEN en local_settings.py"
+    try:
+        with open(path, "rb") as f:
+            r = requests.post(
+                sign_url,
+                headers={"X-Instaladores-Token": token},
+                files={"file": ("instalador.exe", f, "application/octet-stream")},
+                timeout=90,
+            )
+        r.raise_for_status()
+    except Exception as e:
+        return str(e)
+    if r.content[:2] != b"MZ":
+        return f"respuesta inesperada ({len(r.content)} bytes)"
+    with open(path, "wb") as f:
+        f.write(r.content)
+    return None
 
 
 def get_default_timezone():

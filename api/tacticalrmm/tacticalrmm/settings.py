@@ -56,6 +56,9 @@ SELF_SIGNED_INSTALLER = {
 SELF_SIGNED_WIN_AGENT_URL = (
     "https://github.com/pa-co-it/rmmagent/releases/download/win-{ver}/tacticalrmm-windows-{goarch}.exe"
 )
+# pa.co.it: firma Azure del instalador Inno generado (API pa.co.it en EZE).
+# None = sin firmar. URL y token (PACOIT_INSTALADORES_TOKEN) van en local_settings.py.
+SELF_SIGNED_INSTALLER_SIGN_URL = None
 
 MESH_VER = "1.3.1"
 
