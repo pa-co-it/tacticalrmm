@@ -38,7 +38,8 @@ LATEST_AGENT_VER = "2.12.0"
 # pa.co.it: self-hosted signed agents, per platform. Empty dict = use Amidaware.
 # Template supports {ver}, {plat} and {goarch}.
 SELF_SIGNED_AGENTS = {
-    "windows": "https://github.com/pa-co-it/rmmagent/releases/download/win-{ver}/tacticalrmm-{plat}-{goarch}.exe",
+    # windows: el auto-update ejecuta lo descargado como instalador Inno (/VERYSILENT), no el binario suelto
+    "windows": "https://github.com/pa-co-it/rmmagent/releases/download/win-{ver}/tacticalagent-v{ver}-{plat}-{goarch}.exe",
     "linux": "https://github.com/pa-co-it/rmmagent/releases/download/linux-{ver}/tacticalrmm-{plat}-{goarch}",
     "darwin": "https://github.com/pa-co-it/rmmagent/releases/download/macos-{ver}/tacticalrmm-{plat}-{goarch}",
 }
